@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Subscription Waste Detector | IncomeAIHub</title>
+<meta name="description" content="अपने सभी subscriptions track करें, waste पकड़ें और पैसे बचाएं — AI Subscription Waste Detector by IncomeAIHub">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#05070d;
+    --bg-card:#0b0f1a;
+    --bg-card2:#0e1424;
+    --cyan:#00f3ff;
+    --purple:#b829ff;
+    --green:#00ff9d;
+    --red:#ff3860;
+    --orange:#ff9f1c;
+    --yellow:#f6ff00;
+    --text:#c9d6e8;
+    --text-dim:#6f7f9c;
+    --border:rgba(0,243,255,0.18);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:
+      linear-gradient(rgba(5,7,13,0.94),rgba(5,7,13,0.97)),
+      repeating-linear-gradient(0deg, rgba(0,243,255,0.035) 0px, rgba(0,243,255,0.035) 1px, transparent 1px, transparent 3px),
+      repeating-linear-gradient(90deg, rgba(184,41,255,0.05) 0px, transparent 1px, transparent 40px, rgba(184,41,255,0.05) 41px),
+      repeating-linear-gradient(0deg, rgba(184,41,255,0.05) 0px, transparent 1px, transparent 40px, rgba(184,41,255,0.05) 41px);
+    background-color:var(--bg);
+    color:var(--text);
+    font-family:'Rajdhani',sans-serif;
+    min-height:100vh;
+    position:relative;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";
+    position:fixed;inset:0;
+    background:repeating-linear-gradient(0deg, rgba(0,255,157,0.02) 0px, rgba(0,255,157,0.02) 1px, transparent 2px, transparent 4px);
+    pointer-events:none;
+    animation:scan 8s linear infinite;
+    z-index:1;
+  }
+  @keyframes scan{0%{background-position:0 0;}100%{background-position:0 100px;}}
+  .wrap{max-width:1200px;margin:0 auto;padding:16px;position:relative;z-index:2;}
+
+  header{text-align:center;padding:28px 10px 18px;}
+  header h1{
+    font-family:'Orbitron',sans-serif;font-weight:900;
+    font-size:clamp(22px,5vw,42px);
+    letter-spacing:1px;
+    background:linear-gradient(90deg,var(--cyan),var(--green) 45%,var(--purple));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 0 30px rgba(0,243,255,0.25);
+  }
+  header p{color:var(--text-dim);font-size:15px;margin-top:8px;letter-spacing:0.5px;}
+  header .brand{font-family:'Share Tech Mono',monospace;color:var(--purple);font-size:12px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;}
+
+  .ad-slot{
+    border:1px dashed rgba(0,243,255,0.25);
+    background:rgba(255,255,255,0.02);
+    color:var(--text-dim);
+    text-align:center;
+    font-family:'Share Tech Mono',monospace;
+    font-size:11px;
+    padding:10px;
+    border-radius:8px;
+    margin:18px 0;
+    min-height:60px;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  .panel{
+    background:linear-gradient(160deg,var(--bg-card),var(--bg-card2));
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px;
+    margin-bottom:20px;
+    position:relative;
+    box-shadow:0 0 25px rgba(0,243,255,0.03), inset 0 0 40px rgba(184,41,255,0.02);
+  }
+  .panel::before{
+    content:"";position:absolute;top:0;left:16px;right:16px;height:1px;
+    background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+    opacity:0.5;
+  }
+  .panel h2{
+    font-family:'Orbitron',sans-serif;font-size:16px;color:var(--cyan);
+    margin-bottom:14px;letter-spacing:1px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .panel h2 .tag{font-size:10px;background:rgba(184,41,255,0.15);color:var(--purple);padding:3px 8px;border-radius:20px;border:1px solid rgba(184,41,255,0.4);font-family:'Share Tech Mono',monospace;}
+
+  /* Reminder banner */
+  #reminderBanner{display:none;}
+  .reminder-item{
+    border-left:3px solid var(--orange);
+    background:rgba(255,159,28,0.08);
+    padding:10px 14px;border-radius:6px;margin-bottom:8px;
+    font-size:14px;color:var(--orange);
+    display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+  }
+
+  /* Dashboard */
+  .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+  @media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
+  .stat-card{
+    background:rgba(255,255,255,0.02);
+    border:1px solid var(--border);
+    border-radius:12px;padding:14px;text-align:center;
+    transition:transform .2s;
+  }
+  .stat-card:hover{transform:translateY(-3px);}
+  .stat-card .label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+  .stat-card .value{font-family:'Share Tech Mono',monospace;font-size:clamp(16px,3vw,22px);font-weight:700;}
+  .stat-card.c-cyan .value{color:var(--cyan);}
+  .stat-card.c-green .value{color:var(--green);}
+  .stat-card.c-red .value{color:var(--red);}
+  .stat-card.c-purple .value{color:var(--purple);}
+  .stat-card.c-orange .value{color:var(--orange);}
+
+  /* Form */
+  .form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  @media(max-width:768px){.form-grid{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:480px){.form-grid{grid-template-columns:1fr;}}
+  label{font-size:12px;color:var(--text-dim);display:block;margin-bottom:4px;letter-spacing:0.5px;}
+  input,select,textarea{
+    width:100%;background:rgba(0,0,0,0.35);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:10px 12px;border-radius:8px;
+    font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600;
+    outline:none;transition:border .2s, box-shadow .2s;
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--cyan);box-shadow:0 0 12px rgba(0,243,255,0.25);}
+  select{cursor:pointer;}
+
+  .btn{
+    font-family:'Orbitron',sans-serif;font-size:12px;letter-spacing:1px;
+    padding:11px 20px;border-radius:8px;border:1px solid;
+    cursor:pointer;transition:all .2s;background:transparent;
+    text-transform:uppercase;
+  }
+  .btn-cyan{border-color:var(--cyan);color:var(--cyan);}
+  .btn-cyan:hover{background:var(--cyan);color:#000;box-shadow:0 0 20px rgba(0,243,255,0.5);}
+  .btn-purple{border-color:var(--purple);color:var(--purple);}
+  .btn-purple:hover{background:var(--purple);color:#000;box-shadow:0 0 20px rgba(184,41,255,0.5);}
+  .btn-green{border-color:var(--green);color:var(--green);}
+  .btn-green:hover{background:var(--green);color:#000;box-shadow:0 0 20px rgba(0,255,157,0.5);}
+  .btn-red{border-color:var(--red);color:var(--red);}
+  .btn-red:hover{background:var(--red);color:#000;box-shadow:0 0 20px rgba(255,56,96,0.5);}
+  .btn-sm{padding:6px 12px;font-size:10px;}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+
+  /* Controls */
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:16px;}
+  .controls > div{flex:1;min-width:140px;}
+
+  /* Subscription cards */
+  .sub-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+  .sub-card{
+    background:rgba(255,255,255,0.02);
+    border:1px solid var(--border);
+    border-left-width:4px;
+    border-radius:10px;padding:14px;
+    position:relative;
+    transition:transform .2s;
+  }
+  .sub-card:hover{transform:translateY(-2px);}
+  .sub-card.healthy{border-left-color:var(--green);}
+  .sub-card.underused{border-left-color:var(--yellow);}
+  .sub-card.wasteful{border-left-color:var(--orange);}
+  .sub-card.forgotten{border-left-color:var(--red);}
+  .sub-card .top{display:flex;justify-content:space-between;align-items:start;gap:8px;}
+  .sub-card .name{font-family:'Orbitron',sans-serif;font-size:14px;color:#fff;margin-bottom:2px;}
+  .sub-card .cat{font-size:11px;color:var(--text-dim);}
+  .sub-card .cost{font-family:'Share Tech Mono',monospace;font-size:18px;color:var(--cyan);text-align:right;}
+  .sub-card .cost small{display:block;font-size:10px;color:var(--text-dim);}
+  .badge{
+    display:inline-block;font-size:9px;padding:3px 9px;border-radius:20px;
+    font-family:'Share Tech Mono',monospace;letter-spacing:1px;text-transform:uppercase;
+    margin-top:8px;
+  }
+  .badge.healthy{background:rgba(0,255,157,0.15);color:var(--green);border:1px solid var(--green);}
+  .badge.underused{background:rgba(246,255,0,0.12);color:var(--yellow);border:1px solid var(--yellow);}
+  .badge.wasteful{background:rgba(255,159,28,0.15);color:var(--orange);border:1px solid var(--orange);}
+  .badge.forgotten{background:rgba(255,56,96,0.15);color:var(--red);border:1px solid var(--red);}
+  .sub-card .meta{font-size:12px;color:var(--text-dim);margin-top:8px;line-height:1.6;}
+  .waste-bar-track{height:5px;background:rgba(255,255,255,0.06);border-radius:10px;margin-top:10px;overflow:hidden;}
+  .waste-bar-fill{height:100%;border-radius:10px;transition:width .4s;}
+  .sub-card .actions{display:flex;gap:8px;margin-top:12px;}
+  .empty-state{text-align:center;padding:40px 20px;color:var(--text-dim);font-size:14px;}
+
+  /* Charts */
+  .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  @media(max-width:768px){.charts-grid{grid-template-columns:1fr;}}
+  .donut-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;}
+  .donut{width:190px;height:190px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;}
+  .donut .center{
+    width:120px;height:120px;border-radius:50%;background:var(--bg-card);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    box-shadow:inset 0 0 20px rgba(0,0,0,0.5);
+  }
+  .donut .center .v{font-family:'Share Tech Mono',monospace;color:var(--cyan);font-size:16px;font-weight:700;}
+  .donut .center .l{font-size:10px;color:var(--text-dim);}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;font-size:11px;}
+  .legend span{display:flex;align-items:center;gap:5px;}
+  .legend i{width:9px;height:9px;border-radius:50%;display:inline-block;}
+
+  .gauge-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;}
+  .gauge{width:220px;height:120px;position:relative;}
+  .gauge .readout{text-align:center;margin-top:6px;}
+  .gauge .readout .num{font-family:'Orbitron',sans-serif;font-size:26px;color:var(--red);}
+  .gauge .readout .lbl{font-size:11px;color:var(--text-dim);}
+
+  /* AI insights */
+  #aiOutput{
+    background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;
+    padding:14px;margin-top:14px;font-size:14px;line-height:1.7;white-space:pre-wrap;display:none;
+  }
+  .ai-tip{
+    border-left:3px solid var(--purple);padding:8px 12px;margin-bottom:8px;
+    background:rgba(184,41,255,0.06);border-radius:0 6px 6px 0;font-size:13.5px;
+  }
+  .api-key-row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;}
+  .api-key-row input{flex:1;min-width:200px;}
+  .hint{font-size:11px;color:var(--text-dim);margin-top:6px;}
+
+  /* Hindi guide */
+  .guide-box{
+    background:rgba(0,255,157,0.03);
+    border:1px solid rgba(0,255,157,0.25);
+    border-radius:10px;padding:16px;
+  }
+  .guide-box h3{color:var(--green);font-family:'Orbitron',sans-serif;font-size:14px;margin-bottom:10px;}
+  .guide-box ol,.guide-box ul{margin-left:20px;margin-bottom:10px;}
+  .guide-box li{margin-bottom:6px;font-size:14.5px;line-height:1.6;}
+  .guide-box .status-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
+  .status-legend .item{display:flex;align-items:center;gap:6px;font-size:13px;}
+  .status-legend i{width:10px;height:10px;border-radius:50%;}
+
+  footer{text-align:center;padding:20px;color:var(--text-dim);font-size:12px;font-family:'Share Tech Mono',monospace;}
+  footer .brand{color:var(--purple);}
+
+  ::-webkit-scrollbar{width:8px;}
+  ::-webkit-scrollbar-track{background:var(--bg);}
+  ::-webkit-scrollbar-thumb{background:var(--purple);border-radius:10px;}
+
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:var(--bg-card2);border:1px solid var(--cyan);color:var(--cyan);
+    padding:10px 20px;border-radius:8px;font-family:'Share Tech Mono',monospace;font-size:13px;
+    z-index:999;opacity:0;pointer-events:none;transition:opacity .3s, transform .3s;
+    box-shadow:0 0 20px rgba(0,243,255,0.3);
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">IncomeAIHub Presents</div>
+    <h1>⚡ AI SUBSCRIPTION WASTE DETECTOR</h1>
+    <p>अपने हर subscription को track करें — पता लगाएं कहां पैसा waste हो रहा है और कितना बचा सकते हैं</p>
+  </header>
+
+  <div class="ad-slot" id="adTop">Advertisement — ca-pub-XXXXXXXXXXXXXXXX (Top Slot)</div>
+
+  <div id="reminderBanner" class="panel"></div>
+
+  <!-- Dashboard -->
+  <div class="panel">
+    <h2>📊 DASHBOARD <span class="tag">LIVE</span></h2>
+    <div class="stats-grid">
+      <div class="stat-card c-cyan"><div class="label">Active Subs</div><div class="value" id="statCount">0</div></div>
+      <div class="stat-card c-cyan"><div class="label">Monthly Spend</div><div class="value" id="statMonthly">₹0</div></div>
+      <div class="stat-card c-purple"><div class="label">Yearly Spend</div><div class="value" id="statYearly">₹0</div></div>
+      <div class="stat-card c-red"><div class="label">Wasted / Month</div><div class="value" id="statWasted">₹0</div></div>
+      <div class="stat-card c-green"><div class="label">Potential Yearly Saving</div><div class="value" id="statSavings">₹0</div></div>
+    </div>
+  </div>
+
+  <!-- Add Subscription -->
+  <div class="panel">
+    <h2>➕ ADD SUBSCRIPTION</h2>
+    <form id="subForm">
+      <div class="form-grid">
+        <div>
+          <label>Subscription Name / नाम</label>
+          <input type="text" id="fName" placeholder="e.g. Netflix, ChatGPT Plus" required>
+        </div>
+        <div>
+          <label>Category / श्रेणी</label>
+          <select id="fCategory">
+            <option>Streaming</option>
+            <option>AI Tools</option>
+            <option>Software / SaaS</option>
+            <option>Cloud Storage</option>
+            <option>Music</option>
+            <option>Fitness</option>
+            <option>News / Magazine</option>
+            <option>Gaming</option>
+            <option>Education</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label>Cost (₹)</label>
+          <input type="number" id="fCost" min="0" step="0.01" placeholder="e.g. 649" required>
+        </div>
+        <div>
+          <label>Billing Cycle</label>
+          <select id="fCycle">
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+        </div>
+        <div>
+          <label>Next Renewal Date</label>
+          <input type="date" id="fRenewal">
+        </div>
+        <div>
+          <label>Last Used Date</label>
+          <input type="date" id="fLastUsed">
+        </div>
+        <div>
+          <label>Usage Frequency</label>
+          <select id="fFreq">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="rarely">Rarely</option>
+            <option value="never">Never / भूल गया</option>
+          </select>
+        </div>
+        <div>
+          <label>Notes (optional)</label>
+          <input type="text" id="fNotes" placeholder="e.g. shared with team">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button type="submit" class="btn btn-cyan">+ Add Subscription</button>
+        <button type="button" class="btn btn-purple" id="clearFormBtn">Clear Form</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="ad-slot" id="adMid">Advertisement — ca-pub-XXXXXXXXXXXXXXXX (Mid Slot)</div>
+
+  <!-- Controls + List -->
+  <div class="panel">
+    <h2>📋 YOUR SUBSCRIPTIONS</h2>
+    <div class="controls">
+      <div>
+        <label>Search</label>
+        <input type="text" id="searchBox" placeholder="Search by name...">
+      </div>
+      <div>
+        <label>Filter Status</label>
+        <select id="filterStatus">
+          <option value="all">All</option>
+          <option value="healthy">Healthy</option>
+          <option value="underused">Underused</option>
+          <option value="wasteful">Wasteful</option>
+          <option value="forgotten">Forgotten</option>
+        </select>
+      </div>
+      <div>
+        <label>Sort By</label>
+        <select id="sortBy">
+          <option value="waste">Waste Score (High→Low)</option>
+          <option value="cost">Cost (High→Low)</option>
+          <option value="name">Name (A→Z)</option>
+          <option value="renewal">Next Renewal</option>
+        </select>
+      </div>
+    </div>
+    <div class="sub-list" id="subList"></div>
+  </div>
+
+  <!-- Charts -->
+  <div class="panel">
+    <h2>📈 ANALYSIS</h2>
+    <div class="charts-grid">
+      <div class="donut-wrap">
+        <div class="donut" id="donutChart"><div class="center"><div class="v" id="donutTotal">₹0</div><div class="l">Monthly Total</div></div></div>
+        <div class="legend" id="donutLegend"></div>
+      </div>
+      <div class="gauge-wrap">
+        <svg class="gauge" viewBox="0 0 220 120" id="gaugeSvg">
+          <path d="M10,110 A100,100 0 0,1 210,110" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="16" stroke-linecap="round"/>
+          <path id="gaugeFill" d="M10,110 A100,100 0 0,1 210,110" fill="none" stroke="url(#gaugeGrad)" stroke-width="16" stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="314"/>
+          <defs>
+            <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#00ff9d"/>
+              <stop offset="50%" stop-color="#f6ff00"/>
+              <stop offset="100%" stop-color="#ff3860"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="readout">
+          <div class="num" id="gaugeNum">0%</div>
+          <div class="lbl">OVERALL WASTE INDEX</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Insights -->
+  <div class="panel">
+    <h2>🤖 AI INSIGHTS <span class="tag">PREMIUM</span></h2>
+    <p style="font-size:13px;color:var(--text-dim);">Claude API से personalized waste-cutting सलाह लें, या free rule-based analysis इस्तेमाल करें।</p>
+    <div class="api-key-row">
+      <input type="password" id="apiKeyInput" placeholder="Claude API Key (optional — free analysis works without it)">
+      <button class="btn btn-purple" id="getInsightsBtn">Get AI Insights</button>
+    </div>
+    <div class="hint">API key कहीं save नहीं होती — सिर्फ इस session में इस्तेमाल होती है।</div>
+    <div id="aiOutput"></div>
+  </div>
+
+  <!-- Data Tools -->
+  <div class="panel">
+    <h2>🛠 DATA TOOLS</h2>
+    <div class="btn-row">
+      <button class="btn btn-cyan btn-sm" id="exportJsonBtn">Export JSON</button>
+      <button class="btn btn-cyan btn-sm" id="exportCsvBtn">Export CSV</button>
+      <button class="btn btn-green btn-sm" id="importBtn">Import JSON</button>
+      <input type="file" id="importFile" accept=".json" style="display:none;">
+      <button class="btn btn-red btn-sm" id="resetBtn">Reset All Data</button>
+    </div>
+  </div>
+
+  <div class="ad-slot" id="adBottom">Advertisement — ca-pub-XXXXXXXXXXXXXXXX (Bottom Slot)</div>
+
+  <!-- Hindi Usage Guide -->
+  <div class="panel">
+    <div class="guide-box">
+      <h3>📖 इस्तेमाल कैसे करें (Hindi Usage Guide)</h3>
+      <ol>
+        <li><b>Subscription जोड़ें:</b> ऊपर form में नाम, category, cost, billing cycle, next renewal date और last used date भरें, फिर "Add Subscription" दबाएं।</li>
+        <li><b>Usage Frequency ज़रूर चुनें:</b> यह बताता है कि आप उस service को कितना इस्तेमाल करते हैं — इसी से waste score calculate होता है।</li>
+        <li><b>Waste Status समझें:</b> हर card पर रंगीन badge दिखेगा — नीचे legend देखें।</li>
+        <li><b>Dashboard देखें:</b> ऊपर आपको Monthly Spend, Yearly Spend, Wasted Amount और Potential Savings दिखेंगे।</li>
+        <li><b>AI Insights:</b> "Get AI Insights" बटन दबाकर personalized सलाह पाएं — API key न हो तो भी free analysis मिलेगा।</li>
+        <li><b>Data सुरक्षित रखें:</b> "Export JSON" से backup लें। सारा data आपके browser (LocalStorage) में ही save होता है, कहीं और नहीं भेजा जाता।</li>
+        <li><b>Renewal Reminder:</b> अगर किसी subscription का renewal 3 दिन में आने वाला है, तो ऊपर banner में alert दिखेगा।</li>
+      </ol>
+      <div class="status-legend">
+        <div class="item"><i style="background:var(--green)"></i> Healthy — सही इस्तेमाल हो रहा है</div>
+        <div class="item"><i style="background:var(--yellow)"></i> Underused — कम इस्तेमाल हो रहा है</div>
+        <div class="item"><i style="background:var(--orange)"></i> Wasteful — पैसा waste हो रहा है</div>
+        <div class="item"><i style="background:var(--red)"></i> Forgotten — भूल गए हैं, cancel करने पर विचार करें</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span class="brand">IncomeAIHub</span> · AI Subscription Waste Detector · आपका सारा data सिर्फ आपके browser में रहता है
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  const STORAGE_KEY = "iah_sub_waste_detector_v1";
+  let subs = [];
+
+  const CATEGORY_COLORS = {
+    "Streaming":"#00f3ff","AI Tools":"#b829ff","Software / SaaS":"#00ff9d",
+    "Cloud Storage":"#f6ff00","Music":"#ff9f1c","Fitness":"#ff3860",
+    "News / Magazine":"#5b8def","Gaming":"#ff6bd6","Education":"#4dd0e1","Other":"#8a97ac"
+  };
+
+  function load(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      subs = raw ? JSON.parse(raw) : [];
+    }catch(e){ subs = []; }
+  }
+  function save(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(subs));
+  }
+  function uid(){ return 's_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
+  function fmtINR(n){
+    return '₹' + (Number(n)||0).toLocaleString('en-IN', {maximumFractionDigits:0});
+  }
+  function toast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2200);
+  }
+  function monthlyCost(s){
+    const c = Number(s.cost)||0;
+    return s.cycle === 'yearly' ? c/12 : c;
+  }
+
+  // ---- Waste Score Engine ----
+  function daysSince(dateStr){
+    if(!dateStr) return 999;
+    const d = new Date(dateStr);
+    if(isNaN(d)) return 999;
+    const diff = (Date.now() - d.getTime()) / (1000*60*60*24);
+    return Math.max(0, Math.round(diff));
+  }
+  function computeWaste(s){
+    const freqWeight = {daily:0, weekly:12, monthly:32, rarely:62, never:92}[s.freq] ?? 40;
+    const dSince = daysSince(s.lastUsed);
+    let recencyBonus = 0;
+    if(dSince > 90) recencyBonus = 22;
+    else if(dSince > 45) recencyBonus = 14;
+    else if(dSince > 20) recencyBonus = 6;
+
+    const mCost = monthlyCost(s);
+    let costFactor = 0;
+    if(mCost > 2000) costFactor = 8;
+    else if(mCost > 800) costFactor = 5;
+    else if(mCost > 300) costFactor = 2;
+
+    let score = freqWeight + recencyBonus + costFactor;
+    score = Math.max(0, Math.min(100, Math.round(score)));
+
+    let status = 'healthy';
+    if(score >= 75) status = 'forgotten';
+    else if(score >= 50) status = 'wasteful';
+    else if(score >= 22) status = 'underused';
+    return {score, status};
+  }
+  function statusColor(status){
+    return {healthy:'#00ff9d', underused:'#f6ff00', wasteful:'#ff9f1c', forgotten:'#ff3860'}[status];
+  }
+  function statusLabel(status){
+    return {healthy:'Healthy', underused:'Underused', wasteful:'Wasteful', forgotten:'Forgotten'}[status];
+  }
+
+  // ---- Render ----
+  function renderAll(){
+    renderStats();
+    renderReminders();
+    renderList();
+    renderDonut();
+    renderGauge();
+  }
+
+  function renderStats(){
+    const monthly = subs.reduce((a,s)=>a+monthlyCost(s),0);
+    const yearly = monthly*12;
+    const wasted = subs.filter(s=>{const w=computeWaste(s);return w.status==='wasteful'||w.status==='forgotten';})
+                        .reduce((a,s)=>a+monthlyCost(s),0);
+    const savingsYearly = wasted*12;
+    document.getElementById('statCount').textContent = subs.length;
+    document.getElementById('statMonthly').textContent = fmtINR(monthly);
+    document.getElementById('statYearly').textContent = fmtINR(yearly);
+    document.getElementById('statWasted').textContent = fmtINR(wasted);
+    document.getElementById('statSavings').textContent = fmtINR(savingsYearly);
+  }
+
+  function renderReminders(){
+    const box = document.getElementById('reminderBanner');
+    const upcoming = subs.filter(s=>{
+      if(!s.renewal) return false;
+      const d = new Date(s.renewal);
+      const diffDays = Math.ceil((d.getTime()-Date.now())/(1000*60*60*24));
+      return diffDays >= 0 && diffDays <= 3;
+    });
+    if(upcoming.length===0){ box.style.display='none'; box.innerHTML=''; return; }
+    box.style.display='block';
+    box.innerHTML = '<h2>⏰ RENEWAL ALERTS</h2>' + upcoming.map(s=>{
+      const d = new Date(s.renewal);
+      const diffDays = Math.ceil((d.getTime()-Date.now())/(1000*60*60*24));
+      const when = diffDays===0 ? 'आज' : diffDays===1 ? 'कल' : diffDays+' दिन में';
+      return `<div class="reminder-item"><span><b>${escapeHtml(s.name)}</b> का renewal ${when} है (${fmtINR(s.cost)})</span></div>`;
+    }).join('');
+  }
+
+  function getFiltered(){
+    const q = document.getElementById('searchBox').value.trim().toLowerCase();
+    const fStatus = document.getElementById('filterStatus').value;
+    const sortBy = document.getElementById('sortBy').value;
+
+    let list = subs.filter(s=>{
+      const matchQ = !q || s.name.toLowerCase().includes(q);
+      const w = computeWaste(s);
+      const matchStatus = fStatus==='all' || w.status===fStatus;
+      return matchQ && matchStatus;
+    });
+
+    list.sort((a,b)=>{
+      if(sortBy==='waste') return computeWaste(b).score - computeWaste(a).score;
+      if(sortBy==='cost') return monthlyCost(b) - monthlyCost(a);
+      if(sortBy==='name') return a.name.localeCompare(b.name);
+      if(sortBy==='renewal'){
+        const da = a.renewal ? new Date(a.renewal).getTime() : Infinity;
+        const db = b.renewal ? new Date(b.renewal).getTime() : Infinity;
+        return da-db;
+      }
+      return 0;
+    });
+    return list;
+  }
+
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function renderList(){
+    const list = getFiltered();
+    const container = document.getElementById('subList');
+    if(list.length===0){
+      container.innerHTML = '<div class="empty-state">कोई subscription नहीं मिला। ऊपर form से नया subscription जोड़ें।</div>';
+      return;
+    }
+    container.innerHTML = list.map(s=>{
+      const w = computeWaste(s);
+      const mCost = monthlyCost(s);
+      const dSince = s.lastUsed ? daysSince(s.lastUsed)+' दिन पहले' : 'पता नहीं';
+      return `
+      <div class="sub-card ${w.status}">
+        <div class="top">
+          <div>
+            <div class="name">${escapeHtml(s.name)}</div>
+            <div class="cat">${escapeHtml(s.category)} · ${s.cycle==='yearly'?'Yearly':'Monthly'}</div>
+          </div>
+          <div class="cost">${fmtINR(s.cost)}<small>${fmtINR(mCost)}/mo eqv.</small></div>
+        </div>
+        <span class="badge ${w.status}">${statusLabel(w.status)} · ${w.score}%</span>
+        <div class="waste-bar-track"><div class="waste-bar-fill" style="width:${w.score}%;background:${statusColor(w.status)}"></div></div>
+        <div class="meta">
+          Last used: ${dSince}<br>
+          Usage: ${s.freq}${s.renewal ? '<br>Renewal: '+s.renewal : ''}
+          ${s.notes ? '<br>Note: '+escapeHtml(s.notes) : ''}
+        </div>
+        <div class="actions">
+          <button class="btn btn-sm btn-cyan" onclick="SWD.markUsedToday('${s.id}')">Mark Used Today</button>
+          <button class="btn btn-sm btn-red" onclick="SWD.deleteSub('${s.id}')">Delete</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderDonut(){
+    const byCat = {};
+    subs.forEach(s=>{
+      byCat[s.category] = (byCat[s.category]||0) + monthlyCost(s);
+    });
+    const total = Object.values(byCat).reduce((a,b)=>a+b,0);
+    const donut = document.getElementById('donutChart');
+    const legend = document.getElementById('donutLegend');
+    document.getElementById('donutTotal').textContent = fmtINR(total);
+
+    if(total===0){
+      donut.style.background = 'conic-gradient(rgba(255,255,255,0.06) 0deg 360deg)';
+      legend.innerHTML = '<span style="color:var(--text-dim)">कोई data नहीं</span>';
+      return;
+    }
+    let acc = 0;
+    const segments = [];
+    Object.entries(byCat).forEach(([cat,val])=>{
+      const deg = (val/total)*360;
+      const color = CATEGORY_COLORS[cat] || '#8a97ac';
+      segments.push(`${color} ${acc}deg ${acc+deg}deg`);
+      acc += deg;
+    });
+    donut.style.background = `conic-gradient(${segments.join(',')})`;
+    legend.innerHTML = Object.entries(byCat).map(([cat,val])=>{
+      const color = CATEGORY_COLORS[cat] || '#8a97ac';
+      return `<span><i style="background:${color}"></i>${escapeHtml(cat)} (${fmtINR(val)})</span>`;
+    }).join('');
+  }
+
+  function renderGauge(){
+    let avgWaste = 0;
+    if(subs.length>0){
+      avgWaste = subs.reduce((a,s)=>a+computeWaste(s).score,0)/subs.length;
+    }
+    avgWaste = Math.round(avgWaste);
+    const circumference = 314; // approx path length
+    const offset = circumference - (circumference * avgWaste/100);
+    document.getElementById('gaugeFill').setAttribute('stroke-dashoffset', offset);
+    document.getElementById('gaugeNum').textContent = avgWaste + '%';
+    const numEl = document.getElementById('gaugeNum');
+    numEl.style.color = avgWaste>=60 ? 'var(--red)' : avgWaste>=30 ? 'var(--orange)' : 'var(--green)';
+  }
+
+  // ---- Public actions ----
+  window.SWD = {
+    markUsedToday: function(id){
+      const s = subs.find(x=>x.id===id);
+      if(s){ s.lastUsed = new Date().toISOString().slice(0,10); save(); renderAll(); toast('Updated: '+s.name); }
+    },
+    deleteSub: function(id){
+      if(!confirm('क्या आप वाकई इसे delete करना चाहते हैं?')) return;
+      subs = subs.filter(x=>x.id!==id);
+      save(); renderAll(); toast('Subscription deleted');
+    }
+  };
+
+  // ---- Form submit ----
+  document.getElementById('subForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const s = {
+      id: uid(),
+      name: document.getElementById('fName').value.trim(),
+      category: document.getElementById('fCategory').value,
+      cost: parseFloat(document.getElementById('fCost').value)||0,
+      cycle: document.getElementById('fCycle').value,
+      renewal: document.getElementById('fRenewal').value,
+      lastUsed: document.getElementById('fLastUsed').value,
+      freq: document.getElementById('fFreq').value,
+      notes: document.getElementById('fNotes').value.trim()
+    };
+    if(!s.name){ toast('कृपया नाम भरें'); return; }
+    subs.push(s);
+    save();
+    this.reset();
+    document.getElementById('fCycle').value='monthly';
+    document.getElementById('fFreq').value='daily';
+    renderAll();
+    toast('Subscription added: ' + s.name);
+  });
+  document.getElementById('clearFormBtn').addEventListener('click', ()=>{
+    document.getElementById('subForm').reset();
+  });
+
+  // ---- Controls ----
+  ['searchBox','filterStatus','sortBy'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', renderList);
+    document.getElementById(id).addEventListener('change', renderList);
+  });
+
+  // ---- Export / Import / Reset ----
+  document.getElementById('exportJsonBtn').addEventListener('click', ()=>{
+    const blob = new Blob([JSON.stringify(subs,null,2)], {type:'application/json'});
+    downloadBlob(blob, 'subscriptions-backup.json');
+    toast('JSON exported');
+  });
+  document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
+    const headers = ['Name','Category','Cost','Cycle','MonthlyCost','Renewal','LastUsed','Frequency','WasteScore','Status','Notes'];
+    const rows = subs.map(s=>{
+      const w = computeWaste(s);
+      return [s.name,s.category,s.cost,s.cycle,monthlyCost(s).toFixed(2),s.renewal||'',s.lastUsed||'',s.freq,w.score,statusLabel(w.status),(s.notes||'').replace(/,/g,';')];
+    });
+    const csv = [headers.join(','), ...rows.map(r=>r.join(','))].join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    downloadBlob(blob, 'subscriptions.csv');
+    toast('CSV exported');
+  });
+  function downloadBlob(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  document.getElementById('importBtn').addEventListener('click', ()=>{
+    document.getElementById('importFile').click();
+  });
+  document.getElementById('importFile').addEventListener('change', function(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt){
+      try{
+        const data = JSON.parse(evt.target.result);
+        if(Array.isArray(data)){
+          subs = subs.concat(data.map(s=>({...s, id: s.id||uid()})));
+          save(); renderAll();
+          toast('Import successful: '+data.length+' subscriptions');
+        }else{
+          toast('Invalid file format');
+        }
+      }catch(err){ toast('Import failed: invalid JSON'); }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    if(!confirm('सारा data हमेशा के लिए मिट जाएगा। क्या आप सुनिश्चित हैं?')) return;
+    subs = [];
+    save(); renderAll();
+    toast('All data reset');
+  });
+
+  // ---- AI Insights (Claude API optional + rule-based fallback) ----
+  document.getElementById('getInsightsBtn').addEventListener('click', async function(){
+    const btn = this;
+    const out = document.getElementById('aiOutput');
+    const apiKey = document.getElementById('apiKeyInput').value.trim();
+
+    if(subs.length===0){
+      toast('पहले कुछ subscriptions जोड़ें');
+      return;
+    }
+
+    out.style.display = 'block';
+    btn.disabled = true;
+    btn.textContent = 'Analyzing...';
+
+    if(!apiKey){
+      out.innerHTML = ruleBasedInsights();
+      btn.disabled = false; btn.textContent = 'Get AI Insights';
+      return;
+    }
+
+    try{
+      const summary = subs.map(s=>{
+        const w = computeWaste(s);
+        return `${s.name} | ${s.category} | ₹${s.cost}/${s.cycle} | usage:${s.freq} | lastUsed:${s.lastUsed||'unknown'} | wasteScore:${w.score} | status:${w.status}`;
+      }).join('\n');
+
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 1000,
+          messages: [{
+            role:"user",
+            content: `Yahan ek user ki subscriptions ki list hai (waste score 0-100, jitna high utna zyada waste):\n\n${summary}\n\nHinglish mein (Hindi + English mix) 4-6 short, practical, specific bullet-point tips do ki user apna subscription spend kaise optimize kare — kaunsa cancel kare, kaunsa downgrade kare, kaunsa rakhe. Numbers ka reference do jaha useful ho. Sirf bullet points do, koi extra intro/outro nahi.`
+          }]
+        })
+      });
+      const data = await response.json();
+      const textBlocks = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text);
+      const text = textBlocks.join('\n').trim();
+      out.innerHTML = text ? formatAiText(text) : ruleBasedInsights();
+    }catch(err){
+      out.innerHTML = '<div class="ai-tip">⚠ AI call fail हुआ, इसलिए free rule-based analysis दिखाया जा रहा है:</div>' + ruleBasedInsights();
+    }finally{
+      btn.disabled = false; btn.textContent = 'Get AI Insights';
+    }
+  });
+
+  function formatAiText(text){
+    return text.split('\n').filter(l=>l.trim()).map(l=>{
+      const clean = l.replace(/^[-*•]\s*/, '');
+      return `<div class="ai-tip">${escapeHtml(clean)}</div>`;
+    }).join('');
+  }
+
+  function ruleBasedInsights(){
+    const forgotten = subs.filter(s=>computeWaste(s).status==='forgotten');
+    const wasteful = subs.filter(s=>computeWaste(s).status==='wasteful');
+    const tips = [];
+    if(forgotten.length>0){
+      const names = forgotten.map(s=>s.name).join(', ');
+      const total = forgotten.reduce((a,s)=>a+monthlyCost(s),0);
+      tips.push(`🔴 <b>${escapeHtml(names)}</b> लंबे समय से इस्तेमाल नहीं हुए — इन्हें cancel करने से ${fmtINR(total)}/month बच सकते हैं।`);
+    }
+    if(wasteful.length>0){
+      const names = wasteful.map(s=>s.name).join(', ');
+      tips.push(`🟠 <b>${escapeHtml(names)}</b> कम इस्तेमाल हो रहे हैं — किसी सस्ते plan में downgrade करने पर विचार करें।`);
+    }
+    const yearlyCandidates = subs.filter(s=>s.cycle==='monthly' && computeWaste(s).status==='healthy');
+    if(yearlyCandidates.length>0){
+      tips.push(`🟢 जो subscriptions आप regularly इस्तेमाल कर रहे हैं (जैसे ${escapeHtml(yearlyCandidates[0].name)}), उन्हें yearly plan में switch करने से आमतौर पर 15-20% तक बचत होती है।`);
+    }
+    const dup = {};
+    subs.forEach(s=>{ dup[s.category]=(dup[s.category]||0)+1; });
+    Object.entries(dup).forEach(([cat,count])=>{
+      if(count>=2) tips.push(`🔵 आपके पास <b>${escapeHtml(cat)}</b> category में ${count} subscriptions हैं — देखें कि कहीं overlap तो नहीं हो रहा।`);
+    });
+    if(tips.length===0){
+      tips.push('✅ बढ़िया! आपकी सभी subscriptions healthy लग रही हैं। नियमित रूप से check करते रहें।');
+    }
+    return tips.map(t=>`<div class="ai-tip">${t}</div>`).join('');
+  }
+
+  // ---- Init ----
+  load();
+  renderAll();
+})();
+</script>
+</body>
+</html>
